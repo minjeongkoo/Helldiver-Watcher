@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const {Client, GatewayIntentBits, REST, Routes} = require('discord.js');
 
-// Discord 클라이언트 초기화
+// Reset Discord Client
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -12,13 +12,13 @@ const client = new Client({
     ]
 });
 
-// 금지 단어 목록 로드
+// List Load
 const loadFilteredWords = (guildId) => {
     const filePath = path.join(__dirname, './data/filteredWords.json');
     try {
         if (!fs.existsSync(filePath)) {
             fs.writeFileSync(filePath, JSON.stringify({}, null, 2));
-            console.log("금지 단어 목록 파일이 없어서 새로 생성했습니다.");
+            console.log("파일 생성");
         }
         const data = fs.readFileSync(filePath, 'utf8');
         const filteredWords = JSON.parse(data);
@@ -29,7 +29,7 @@ const loadFilteredWords = (guildId) => {
     }
 };
 
-// 금지 단어 목록 저장
+// Save List
 const saveFilteredWords = (guildId, words) => {
     const filePath = path.join(__dirname, './data/filteredWords.json');
     try {
@@ -97,23 +97,23 @@ const registerCommands = async () => {
     }
 };
 
-// 단어 필터링 함수
+// Filtering
 const checkForFilteredWords = (message) => {
-    const guildId = message.guild.id; // 서버 ID 가져오기
+    const guildId = message.guild.id; // 서버 ID
     const filteredWords = loadFilteredWords(guildId);
     const messageContent = message.content.toLowerCase(); // 메시지를 소문자로 변환
 
-    // 금지 단어 확인
+    // Check Words
     for (const word of filteredWords) {
         if (messageContent.includes(word.toLowerCase())) {
             return {word, guildId}; // 발견된 단어와 서버 ID 반환
         }
     }
 
-    return null; // 발견된 단어가 없을 경우 null 반환
+    return null;
 };
 
-// 단어 마스킹 함수
+// Masking
 const maskFilteredWords = (message, filteredWord) => {
     const regex = new RegExp(filteredWord, 'gi');
     return message.replace(regex, '[검열 삭제]');
@@ -122,7 +122,7 @@ const maskFilteredWords = (message, filteredWord) => {
 client.on('messageCreate', async message => {
     if (message.author.bot || !message.guild) return;
 
-    // console.log(`메시지 내용: ${message.content}`); // 메시지 내용 로그
+    // console.log(`메시지 내용: ${message.content}`);
     // 금지 단어 감지
     const warningData = checkForFilteredWords(message);
     if (warningData) {
@@ -133,14 +133,12 @@ client.on('messageCreate', async message => {
         // 단어 마스킹 처리
         const modifiedMessage = maskFilteredWords(message.content, word);
 
-        // 랜덤 경고 메시지 배열
         const warningMessages = [
             `[검열] 조사 결과 반역자는 해당 단어를 일상 생활에서 사용한 것으로 밝혀졌습니다. 사용에 주의하세요.`,
             `[검열] 메시지에서 당국의 주목을 끌 수 있는 단어가 감지되었습니다.`,
             `[검열] 통제된 민주주의 체제에 반하는 내용은 검열됩니다.`
         ];
 
-        // 랜덤하게 경고 메시지 선택
         const randomWarning = warningMessages[Math.floor(Math.random() * warningMessages.length)];
 
         // 경고 메시지 및 메시지 삭제
@@ -170,7 +168,10 @@ client.on('interactionCreate', async (interaction) => {
         const updatedWords = [...filteredWords, newWord];
         saveFilteredWords(guildId, updatedWords);
 
-        await interaction.reply(`금지 단어 목록에 "${newWord}"를 추가했습니다.`);
+        await interaction.reply({
+            content: `금지 단어 목록에 "${newWord}"를 추가했습니다.`,
+            ephemeral: true
+        });
     } else if (commandName === 'delete') {
         const wordToRemove = options.getString('단어');
         const guildId = interaction.guild.id; // 서버 ID 가져오기
@@ -182,17 +183,24 @@ client.on('interactionCreate', async (interaction) => {
         // 업데이트된 목록 저장
         saveFilteredWords(guildId, updatedWords);
 
-        await interaction.reply(`금지 단어 목록에서 "${wordToRemove}"를 삭제했습니다.`);
+        await interaction.reply({
+            content: `금지 단어 목록에서 "${wordToRemove}"를 삭제했습니다.`,
+            ephemeral: true
+        });
     } else if (commandName === 'list') {
         const guildId = interaction.guild.id; // 서버 ID 가져오기
         const currentWords = loadFilteredWords(guildId);
 
         if (currentWords.length === 0) {
-            await interaction.reply("현재 설정된 금지 단어가 없습니다.");
+            await interaction.reply({
+                content: '금지어 목록이 비어있어요 x_x',
+                ephemeral: true
+            });
         } else {
-            await interaction.reply(
-                `금지 단어 목록: \n ${currentWords.map(word => `- ${word}`).join('\n')}`)
-            ;
+            await interaction.reply({
+                content: `금지 단어 목록: \n ${currentWords.map(word => `- ${word}`).join('\n')}`,
+                ephemeral: true
+            });
         }
     }
 });
