@@ -12,7 +12,7 @@ const checkForFilteredWords = (message) => {
             words.push(word);
         }
     }
-    console.log('words', words);
+    // console.log('words', words);
     return words.length > 0 ? {words, guildId} : null;
 };
 
