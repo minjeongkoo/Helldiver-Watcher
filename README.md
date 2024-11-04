@@ -4,7 +4,7 @@
 - 먼저 이 봇을 설치하고, 당국의 주목을 끌 수 있는 단어들을 등록하세요. 헬다이버들은 이제 안심하고 리버리-티를 즐길 수 있을겁니다! ✅
 
 # How to Install
-[디스코드 서버에 적용하기](https://discord.com/oauth2/authorize?client_id=1247436650666266654)
+[디스코드 서버에 적용하기](https://discord.com/oauth2/authorize?client_id=1247436650666266654)
 
 # How to Use
 
